@@ -1,39 +1,32 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { nanoid } from 'nanoid';
 
 import styles from './App.module.css';
 
 import ContactForm from '../ContactForm/ContactForm.jsx';
 import ContactList from '../ContactList/ContactList.jsx';
 import Filter from '../Filter/Filter.jsx';
-import * as storage from '../../services/localStorage';
-// import * as actions from '../../redux/contacts/contactsActions';
+import Loader from '../Loader/Loader.jsx';
+import ErrorMsg from '../ErrorMsg/ErrorMsg';
 import * as actions from '../../redux/contactsSlice/contactsSlice';
-
-const STORAGE_KEY = 'contacts';
+import * as operations from '../../redux/contactsSlice/contactsOperations';
+import * as selectors from '../../redux/contactsSlice/contactsSelectors';
 
 const App = () => {
-  const contacts = useSelector(state => state.contacts.items);
-  const filter = useSelector(state => state.contacts.filter);
+  const contacts = useSelector(selectors.getContacts);
+  const loading = useSelector(selectors.getLoading);
+  const error = useSelector(selectors.getError);
+  const filter = useSelector(selectors.getFilter);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const savedContacts = storage.get(STORAGE_KEY);
-    if (savedContacts) {
-      dispatch(actions.setContacts(savedContacts));
-    }
+    dispatch(operations.getContacts());
   }, [dispatch]);
 
-  useEffect(() => {
-    storage.save(STORAGE_KEY, contacts);
-  }, [contacts]);
-
-  const formSubmitHandler = (name, number) => {
+  const formSubmitHandler = (name, phone) => {
     const newContact = {
-      id: nanoid(),
       name,
-      number,
+      phone,
     };
 
     if (
@@ -44,11 +37,11 @@ const App = () => {
       return alert(`${newContact.name} is already in contacts!`);
     }
 
-    dispatch(actions.addContact(newContact));
+    dispatch(operations.addContact(newContact));
   };
 
-  const deleteContact = contactId => {
-    dispatch(actions.deleteContact(contactId));
+  const deleteContact = id => {
+    dispatch(operations.deleteContact(id));
     dispatch(actions.changeFilter(''));
   };
 
@@ -64,6 +57,8 @@ const App = () => {
     dispatch(actions.changeFilter(e.target.value));
   };
 
+  const noContacts = !loading && !contacts.length;
+
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Phonebook</h1>
@@ -71,6 +66,12 @@ const App = () => {
       <ContactForm onSubmit={formSubmitHandler} />
 
       <h2 className={styles.title}>Contacts</h2>
+
+      {loading && <Loader />}
+
+      {noContacts && <h4>No cities yet</h4>}
+
+      {error && <ErrorMsg message={error} />}
 
       {contacts.length > 1 && <Filter value={filter} onChange={changeFilter} />}
 

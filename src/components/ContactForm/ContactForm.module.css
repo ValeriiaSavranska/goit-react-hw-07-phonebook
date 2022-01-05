@@ -22,7 +22,9 @@
 .btn {
   margin-top: 30px;
   font-size: 14px;
-  padding: 5px;
+  padding: 7px;
+  border: none;
   border-radius: 5px;
+  background-color: rgb(255, 31, 31);
   cursor: pointer;
 }
